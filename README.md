@@ -8,6 +8,20 @@ The system allows users to:
 - Automatically process uploaded images with Amazon Rekognition
 - View results in a user-friendly React interface
 
+---
+
+## Tech Stack
+
+| Layer        | Technology Used            |
+|-------------|---------------------------|
+| **Frontend** | React (TypeScript), Material UI, Axios, React Router |
+| **Backend**  | AWS Lambda (Node.js), API Gateway (REST), AWS SDK |
+| **Storage**  | DynamoDB (Tasks), S3 (Images) |
+| **AI/ML**    | AWS Rekognition (Image Label Detection) |
+| **IaC**      | AWS CDK (TypeScript) |
+
+---
+
 ## Setup Instructions
 
 ### Prerequisites
