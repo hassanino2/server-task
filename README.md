@@ -24,7 +24,7 @@ The system allows users to:
 
 ## Architecture
 
-![Architecture Diagram](https://github.com/user-attachments/assets/04ac9c02-9bb6-43c5-9e51-5bf33ad89077)
+![Architecture Diagram](./docs/architecture.png)
 
 
 ---
