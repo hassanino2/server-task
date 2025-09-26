@@ -24,7 +24,7 @@ The system allows users to:
 
 ## Architecture
 
-![Architecture Diagram](./docs/architecture.png)
+![Architecture Diagram](./docs/Architecture.png)
 
 
 ---
