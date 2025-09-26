@@ -1,0 +1,1446 @@
+{
+ "Resources": {
+  "TasksTable88911DC5": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "taskId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "createdAt",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "UserIdIndex",
+      "KeySchema": [
+       {
+        "AttributeName": "userId",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "createdAt",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "taskId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "userId",
+      "KeyType": "RANGE"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TasksTable/Resource"
+   }
+  },
+  "TaskAttachmentsBucketB1B7317F": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "CorsConfiguration": {
+     "CorsRules": [
+      {
+       "AllowedHeaders": [
+        "*"
+       ],
+       "AllowedMethods": [
+        "GET",
+        "PUT"
+       ],
+       "AllowedOrigins": [
+        "*"
+       ],
+       "ExposedHeaders": [
+        "ETag"
+       ]
+      }
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskAttachmentsBucket/Resource"
+   }
+  },
+  "TaskAttachmentsBucketPolicyB0E59FB3": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "TaskAttachmentsBucketB1B7317F"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TaskAttachmentsBucketB1B7317F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "TaskAttachmentsBucketB1B7317F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskAttachmentsBucket/Policy/Resource"
+   }
+  },
+  "TaskAttachmentsBucketAutoDeleteObjectsCustomResource1C91FE2C": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "TaskAttachmentsBucketB1B7317F"
+    }
+   },
+   "DependsOn": [
+    "TaskAttachmentsBucketPolicyB0E59FB3"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskAttachmentsBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-084375589151-us-east-1",
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "TaskAttachmentsBucketB1B7317F"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "TaskLambdaRole25C35419": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskLambdaRole/Resource"
+   }
+  },
+  "TaskLambdaRoleDefaultPolicy4EBFBBA6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "rekognition:DetectLabels",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TasksTable88911DC5",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "TasksTable88911DC5",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TaskAttachmentsBucketB1B7317F",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "TaskAttachmentsBucketB1B7317F",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "TaskLambdaRoleDefaultPolicy4EBFBBA6",
+    "Roles": [
+     {
+      "Ref": "TaskLambdaRole25C35419"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "TaskFunction6EE1CAB0": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-084375589151-us-east-1",
+     "S3Key": "5ec4d925027f65b3c448ddf01434b972b0696337b15e64ecbf57abfc6ae532fc.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "TASKS_TABLE": {
+       "Ref": "TasksTable88911DC5"
+      },
+      "BUCKET_NAME": {
+       "Ref": "TaskAttachmentsBucketB1B7317F"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "TaskLambdaRole25C35419",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x"
+   },
+   "DependsOn": [
+    "TaskLambdaRoleDefaultPolicy4EBFBBA6",
+    "TaskLambdaRole25C35419"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/TaskFunction/Resource",
+    "aws:asset:path": "asset.5ec4d925027f65b3c448ddf01434b972b0696337b15e64ecbf57abfc6ae532fc",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ServerTaskApi33BFB072": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Name": "ServerTask Service"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Resource"
+   }
+  },
+  "ServerTaskApiCloudWatchRole49448F8F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/CloudWatchRole/Resource"
+   }
+  },
+  "ServerTaskApiAccountD581C18E": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "ServerTaskApiCloudWatchRole49448F8F",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "ServerTaskApi33BFB072"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Account"
+   }
+  },
+  "ServerTaskApiDeployment4ABF7720fa66290124d5c87637505153c38126c1": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "Automatically created by the RestApi construct",
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "DependsOn": [
+    "ServerTaskApiOPTIONSF0306DD0",
+    "ServerTaskApitaskstaskIdDELETE9A69C02B",
+    "ServerTaskApitaskstaskIdGET8729F029",
+    "ServerTaskApitaskstaskIdOPTIONS6E6468F3",
+    "ServerTaskApitaskstaskIdprocessimageOPTIONS9514D7DF",
+    "ServerTaskApitaskstaskIdprocessimagePOSTC3F39673",
+    "ServerTaskApitaskstaskIdprocessimageC8FB243A",
+    "ServerTaskApitaskstaskIdPUT278A858C",
+    "ServerTaskApitaskstaskId3D9589D5",
+    "ServerTaskApitasksGETEA37CF5E",
+    "ServerTaskApitasksOPTIONS8A043EB3",
+    "ServerTaskApitasksPOST295E56F5",
+    "ServerTaskApitasks8C9D3775"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "ServerTaskApiDeploymentStagedev6892AF5D": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "ServerTaskApiDeployment4ABF7720fa66290124d5c87637505153c38126c1"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    },
+    "StageName": "dev"
+   },
+   "DependsOn": [
+    "ServerTaskApiAccountD581C18E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/DeploymentStage.dev/Resource"
+   }
+  },
+  "ServerTaskApiOPTIONSF0306DD0": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "ServerTaskApi33BFB072",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/OPTIONS/Resource"
+   }
+  },
+  "ServerTaskApitasks8C9D3775": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "ServerTaskApi33BFB072",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "tasks",
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/Resource"
+   }
+  },
+  "ServerTaskApitasksOPTIONS8A043EB3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ServerTaskApitasks8C9D3775"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/OPTIONS/Resource"
+   }
+  },
+  "ServerTaskApitasksGETApiPermissionServerTaskStackServerTaskApiC8A1D453GETtasksF6CC3D5A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/GET/tasks"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/GET/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.GET..tasks"
+   }
+  },
+  "ServerTaskApitasksGETApiPermissionTestServerTaskStackServerTaskApiC8A1D453GETtasks5EA2A909": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/GET/tasks"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/GET/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.GET..tasks"
+   }
+  },
+  "ServerTaskApitasksGETEA37CF5E": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitasks8C9D3775"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/GET/Resource"
+   }
+  },
+  "ServerTaskApitasksPOSTApiPermissionServerTaskStackServerTaskApiC8A1D453POSTtasks2DCFDF7D": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/POST/tasks"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/POST/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.POST..tasks"
+   }
+  },
+  "ServerTaskApitasksPOSTApiPermissionTestServerTaskStackServerTaskApiC8A1D453POSTtasks5C326FED": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/POST/tasks"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/POST/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.POST..tasks"
+   }
+  },
+  "ServerTaskApitasksPOST295E56F5": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitasks8C9D3775"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/POST/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskId3D9589D5": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ServerTaskApitasks8C9D3775"
+    },
+    "PathPart": "{taskId}",
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdOPTIONS6E6468F3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskId3D9589D5"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/OPTIONS/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdGETApiPermissionServerTaskStackServerTaskApiC8A1D453GETtaskstaskIdCA7E8122": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/GET/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/GET/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.GET..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdGETApiPermissionTestServerTaskStackServerTaskApiC8A1D453GETtaskstaskId553DDAFD": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/GET/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/GET/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.GET..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdGET8729F029": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskId3D9589D5"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/GET/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdPUTApiPermissionServerTaskStackServerTaskApiC8A1D453PUTtaskstaskId1672F4CA": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/PUT/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/PUT/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.PUT..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdPUTApiPermissionTestServerTaskStackServerTaskApiC8A1D453PUTtaskstaskIdE42F686A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/PUT/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/PUT/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.PUT..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdPUT278A858C": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskId3D9589D5"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/PUT/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdDELETEApiPermissionServerTaskStackServerTaskApiC8A1D453DELETEtaskstaskId1B34274E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/DELETE/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/DELETE/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.DELETE..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdDELETEApiPermissionTestServerTaskStackServerTaskApiC8A1D453DELETEtaskstaskIdA8E4E642": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/DELETE/tasks/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/DELETE/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.DELETE..tasks.{taskId}"
+   }
+  },
+  "ServerTaskApitaskstaskIdDELETE9A69C02B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskId3D9589D5"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/DELETE/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdprocessimageC8FB243A": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ServerTaskApitaskstaskId3D9589D5"
+    },
+    "PathPart": "process-image",
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/process-image/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdprocessimageOPTIONS9514D7DF": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskIdprocessimageC8FB243A"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/process-image/OPTIONS/Resource"
+   }
+  },
+  "ServerTaskApitaskstaskIdprocessimagePOSTApiPermissionServerTaskStackServerTaskApiC8A1D453POSTtaskstaskIdprocessimage006F2AF3": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/",
+       {
+        "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+       },
+       "/POST/tasks/*/process-image"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/process-image/POST/ApiPermission.ServerTaskStackServerTaskApiC8A1D453.POST..tasks.{taskId}.process-image"
+   }
+  },
+  "ServerTaskApitaskstaskIdprocessimagePOSTApiPermissionTestServerTaskStackServerTaskApiC8A1D453POSTtaskstaskIdprocessimage35104805": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TaskFunction6EE1CAB0",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:084375589151:",
+       {
+        "Ref": "ServerTaskApi33BFB072"
+       },
+       "/test-invoke-stage/POST/tasks/*/process-image"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/process-image/POST/ApiPermission.Test.ServerTaskStackServerTaskApiC8A1D453.POST..tasks.{taskId}.process-image"
+   }
+  },
+  "ServerTaskApitaskstaskIdprocessimagePOSTC3F39673": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TaskFunction6EE1CAB0",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "ServerTaskApitaskstaskIdprocessimageC8FB243A"
+    },
+    "RestApiId": {
+     "Ref": "ServerTaskApi33BFB072"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/ServerTaskApi/Default/tasks/{taskId}/process-image/POST/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/21Ry07DMBD8Fu6OgYDgnIK4IaLCvdrYS7tNbEex3SqK8u/4EZQIcdrZGY9n1y55ef/M727gagsh26Kjhk+fDkTLAnWY5KhBGRnIL2g6ZC/fOoGZ2Qc+7bxo0UVyQbnUpiMxrvTS52YHNrgJFJ/2Jt+Y6mrKaGYdqEYCn968Fo6MjtoW1zgosjZ0cZoDWIvO8ioWBj0dweEVxhCD1lU9paQVVkIYrx17xb4zo0Kd9th04RWOabwMgtX4QWCcn72jOxkZxQX9qktIwvO8ob11Rv136o9UD+ZCEocUk3aJ8aSP0fPhXe/dzLSRyM/29lI+8qfwe2dLVAxhG1LI97n+ABxkR7vaAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ServerTaskStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ServerTaskApiEndpoint44355BF9": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "ServerTaskApi33BFB072"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "ServerTaskApiDeploymentStagedev6892AF5D"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
