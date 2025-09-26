@@ -83,14 +83,10 @@ aws s3 sync build/ s3://<your-frontend-bucket> --delete
 
 ---
 
-This project demonstrates a production-ready serverless architecture:
-
-✅ Scalable, cost-effective, and easy to deploy
-
-✅ Secure image uploads with pre-signed S3 URLs
-
-✅ Automated image analysis with Rekognition
-
-✅ Beautiful and responsive UI built with React + Material UI
+This project demonstrates a **production-ready serverless architecture**:
+- ✅ Scalable, cost-effective, and easy to deploy
+- ✅ Secure image uploads with pre-signed S3 URLs
+- ✅ Automated image analysis with Rekognition
+- ✅ Beautiful and responsive UI built with React + Material UI
 
 
