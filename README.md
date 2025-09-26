@@ -67,14 +67,14 @@ npm start
 
 ## Deployment Guide
 
-### Redeploying Backend
+### Redeploy Backend
 ```bash
 cd server-task
 cdk synth
 cdk deploy
 ```
 
-### Deploying Frontend (S3)
+### Deploy Frontend to S3
 ```bash
 cd frontend/server-task-frontend
 npm run build
@@ -83,22 +83,14 @@ aws s3 sync build/ s3://<your-frontend-bucket> --delete
 
 ---
 
-## ✅ **Phase 6 Completion Criteria**
+This project demonstrates a production-ready serverless architecture:
 
-You can call Phase 6 (and the project!) **complete** when:
+✅ Scalable, cost-effective, and easy to deploy
 
-- [x] **README.md** is updated with overview, setup, features, architecture diagram, and deployment guide  
-- [x] Codebase is clean (no unused files, properly commented, formatted)  
-- [x] Project is easy to clone and deploy from scratch  
-- [x] Repo is ready for GitHub (nice README + diagram)  
+✅ Secure image uploads with pre-signed S3 URLs
 
-At this point, you have a **production-ready, portfolio-worthy project** that demonstrates:
+✅ Automated image analysis with Rekognition
 
-- AWS CDK Infrastructure as Code  
-- Serverless architecture  
-- Secure pre-signed uploads  
-- AWS Rekognition integration  
-- A React frontend with Material UI  
+✅ Beautiful and responsive UI built with React + Material UI
 
----
 
