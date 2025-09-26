@@ -22,6 +22,12 @@ The system allows users to:
 
 ---
 
+## Architecture
+
+![Architecture Diagram](<img width="1468" height="642" alt="Architecture" src="https://github.com/user-attachments/assets/04ac9c02-9bb6-43c5-9e51-5bf33ad89077" />)
+
+---
+
 ## Setup Instructions
 
 ### Prerequisites
